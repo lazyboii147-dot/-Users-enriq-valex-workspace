@@ -1,0 +1,42 @@
+name: Auto Sync Workspace
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Pull latest changes (safe merge)
+        run: |
+          git pull origin main --allow-unrelated-histories || true
+
+      - name: Stage workspace changes
+        run: |
+          git add -A
+
+      - name: Commit changes
+        run: |
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-sync workspace"
+          fi
+
+      - name: Push changes
+        run: |
+          git push origin main
